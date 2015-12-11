@@ -73,7 +73,6 @@ WORKDIR /opt/tools/mesa-llvm
 RUN cp /opt/tools/src/mesa-11.0.4/build/linux-x86_64/gallium/targets/libgl-xlib/libGL.so.1.5 . && \
     ln -s libGL.so.1 libGL.so && \
     ln -s libGL.so.1.5 libGL.so.1
-
 #----------------------------------------------------------------------------------------------
 WORKDIR /opt/tools/src/openswr-mesa
 RUN git clone https://github.com/OpenSWR/openswr-mesa.git src-avx2 --depth 1 -b 11.0-openswr
@@ -97,8 +96,33 @@ RUN cp /opt/tools/src/openswr-mesa/src-avx/build/linux-x86_64/gallium/targets/li
     ln -s libGL.so.1 libGL.so && \
     ln -s libGL.so.1.5 libGL.so.1
 
+#----------------------------------------------------------------------------------------------
+WORKDIR /opt/tools/src/os-mesa
+RUN wget ftp://ftp.freedesktop.org/pub/mesa/11.0.4/mesa-11.0.4.tar.xz
+RUN tar Jxf mesa-11.0.4.tar.xz
+
+WORKDIR /opt/tools/src/os-mesa/mesa-11.0.4
+RUN ./configure \
+      --disable-xvmc \
+      --disable-glx \
+      --disable-dri \
+      --with-dri-drivers= \
+      --with-gallium-drivers=swrast \
+      --enable-texture-float \
+      --disable-egl \
+      --with-egl-platforms= \
+      --enable-gallium-osmesa \
+      --enable-gallium-llvm=yes \
+      --disable-llvm-shared-libs \
+      --with-llvm-prefix=/opt/tools \
+      --prefix=/opt/tools/osmesa
+RUN make -j 25
+RUN make install
+#----------------------------------------------------------------------------------------------
+
 WORKDIR /opt/tools
 RUN tar zcvf mesa-llvm.tar.gz mesa-llvm
 RUN tar zcvf mesa-swr-avx2.tar.gz mesa-swr-avx2
 RUN tar zcvf mesa-swr-avx.tar.gz mesa-swr-avx
+RUN tar zcvf osmesa.tar.gz osmesa
 CMD bash
